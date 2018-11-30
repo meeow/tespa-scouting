@@ -22,8 +22,8 @@ async def chat(ctx, *, name):
     conversation = ctx.message.content
     user = ctx.message.author.name + '#' + ctx.message.author.discriminator
     guild_id = ctx.message.guild.id
-
-    msg = await ctx.send("MeowBot is thinking...:thinking:")
+    thinking = discord.Embed().add_field(name="Thinking...", value="MeowBot is thinking...:thinking:")
+    msg = await ctx.send(embed=thinking)
 
     try:
         reply = get_reply(conversation)
@@ -34,8 +34,9 @@ async def chat(ctx, *, name):
         print ("No reply generated.")
         reply = get_general_error()
 
-    print("Sending message:", reply)
-    await msg.edit(content=reply)
+    #print("Sending message:", reply)
+    await msg.edit(embed=reply)
+
 
 bot.run(discord_token)
 

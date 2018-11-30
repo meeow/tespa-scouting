@@ -28,7 +28,7 @@ def get_reply(conversation):
         return result
 
     def map_to_command(entities, intents):
-        response = ''
+        response = discord.Embed()  
         intent_values = [_ for _ in intents.values() if _]
         entity_values = [_ for _ in entities.values() if _]
         digit_values = [_ for _ in digits.values() if _]
@@ -40,9 +40,9 @@ def get_reply(conversation):
         if intents['update_db']:
             if entities['confirm']:
                 update_db()
-                response += random.choice(statuses['updated_database'])
+                response.add_field(inline=0, name="Alert",value=random.choice(statuses['updated_database']))
             else:
-                response += random.choice(statuses['confirm_runtime'])
+                response.add_field(inline=0, name="Alert",value=random.choice(statuses['confirm_runtime']))
             return response
 
         # top of leaderboard
@@ -52,10 +52,11 @@ def get_reply(conversation):
             if digit_values:
                 top = int(digit_values[0][0])
             teams = get_leaderboard().sort_values(['rating'], ascending=0).head(int(top))[['team_name','rating']].values.tolist()
-            response += 'The top {} teams are: \n'.format(top)
+            description = ''
             for team in teams:
                 team_name, rating = team[0], team[1]
-                response += '{} - {} rating\n'.format(team_name, rating)
+                description += '{} - {} rating\n'.format(team_name, rating)
+            response.add_field(inline=0, name='The top {} teams are: \n'.format(top), value=description)
 
         # leaderboard rating/ranking
         if (intents['rank'] or intents['rating'] and entities['team_name']):
@@ -63,12 +64,12 @@ def get_reply(conversation):
                 rank = get_from_leaderboard(team_name, column_name='rank')
                 rating = get_from_leaderboard(team_name, column_name='rating')
                 if intents['rank']:
-                    response += "The leaderboard rank of {} is {}.\n".format(team_name, rank)
+                    response.add_field(inline=0, name="Tespa Leaderboard", value="The leaderboard rank of {} is {}.\n".format(team_name, rank))
                 if intents['rating']:
-                    response += "The leaderboard rating of {} is {}.\n".format(team_name, rating)
+                    response.add_field(inline=0, name="Tespa Leaderboard", value="The leaderboard rating of {} is {}.\n".format(team_name, rating))
 
         # team or player SRs
-        if intents['skill_rating'] or (intents['top'] and digit_values and intents['players']):
+        if intents['skill_rating'] or (intents['top'] and digit_values ):#and intents['players']):
             # team SR
             if entities['team_name']:
                 players_sr = []
@@ -77,33 +78,35 @@ def get_reply(conversation):
                         top = digit_values[0]
                         top = int(list(digits.keys())[list(digits.values()).index(top)][0])
                         team_sr, players_sr = collect_team_sr(team_name, top=top)
-                        response += "\nThe top {} SR of {} is {}.\n".format(top, team_name, team_sr) if team_sr else random.choice(errs['sr_lookup_team']).format(team_name)
+                        response.add_field(inline=0, name="Top {} SR".format(top),value="The top {} SR of {} is {}.\n".format(top, team_name, team_sr) if team_sr else random.choice(errs['sr_lookup_team']).format(team_name))
                     else:
                         team_sr, players_sr = collect_team_sr(team_name)
-                        response += "\nThe average SR of {} is {}.\n".format(team_name, team_sr) if team_sr else random.choice(errs['sr_lookup_team']).format(team_name)
+                        response.add_field(inline=0, name="Average SR",value="\nThe average SR of {} is {}.\n".format(team_name, team_sr) if team_sr else random.choice(errs['sr_lookup_team']).format(team_name))
                     if players_sr:
-                        response += "\nThe individual players' SRs for {} are:\n".format(team_name)
-                        response += ''.join(["{} - {} SR\n".format(p[0], p[1]) if not math.isnan(p[1]) else "{} - {}\n".format(p[0], "Not Found.") for p in players_sr])
+                        title = "{}".format(team_name)
+                        content = ''.join(["[{}]({}) - {} SR\n".format(p[0],"https://www.overbuff.com/players/pc/"+p[0], p[1]) if not math.isnan(p[1]) else "[{}]({}) - {}\n".format(p[0],"https://www.overbuff.com/players/pc/"+p[0], "Not Found.") for p in players_sr])
+                        response.add_field(inline=0, name=title, value=content)
             # player SR
             if entities['battletag']:
                 for btag in entities['battletag']:
                     print(btag)
                     sr = collect_single_sr(btag.replace('#','-'))
-                    response += "The SR of {} is {}.\n".format(btag, sr) if sr else random.choice(errs['sr_lookup_player']).format(btag)
+                    response.add_field(inline=0, name=btag, value="The SR of {} is {}.\n".format(btag, sr) if sr else random.choice(errs['sr_lookup_player']).format(btag))
             if not entity_values:
-                response += random.choice(requests['no_entity']).format(intent_string)
+                response.add_field(inline=0, name='Error',value=random.choice(requests['no_entity']).format(intent_string))
 
-        elif response:
+        elif response.fields != []:
+            print (response.fields)
             return response
         elif intents['help'] or intents['greeting']:
-            response += random.choice(helps['default_help'])
+            response.add_field(inline=0, name='Help', value=random.choice(helps['default_help']))
         elif intent_values and not entity_values:
-            response = random.choice(requests['no_entity']).format(intent_string)
+            response.add_field(inline=0, name='Error', value=random.choice(requests['no_entity']).format(intent_string))
         elif entity_values and not intent_values:
-            response = random.choice(requests['no_intent']).format(entity_string)
+            response.add_field(inline=0, name='Error', value=random.choice(requests['no_intent']).format(entity_string))
         elif not entity_values and not intent_values:
-            response += random.choice(requests['no_intent_or_entity']) + '\n'
-            response += random.choice(helps['compact_help'])
+            response.add_field(inline=0, name='Error', value=random.choice(requests['no_intent_or_entity']) + '\n')
+            response.add_field(inline=0, name='Quick Help',value=random.choice(helps['compact_help']))
 
         return response
 
@@ -114,14 +117,15 @@ def get_reply(conversation):
     #if not intents['update_db']:
     entities['team_name'] = check_for_team_name(get_teams()['team_name'])
     
-    msg = str(map_to_command(entities, intents))
-
-    return msg
+    response = map_to_command(entities, intents)
+    return response
 
 def get_general_error():
     from texts import errs
+    response = discord.Embed()  
     msg = random.choice(errs['default_err'])
-    return msg
+    response.add_field(inline=0, name='Error',value=msg)
+    return response
 
 
 
