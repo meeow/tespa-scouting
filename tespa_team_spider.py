@@ -1,5 +1,6 @@
 from scrapy import Request
 from scrapy.spiders import Spider
+from CONFIG import TOURNAMENT_URL
 
 class CollectTeams(Spider):
     name = 's2'
@@ -7,7 +8,7 @@ class CollectTeams(Spider):
     #allowed_domains
     name = "s2"
     allowed_domains = ["tespa.org"]
-    start_urls = ["https://compete.tespa.org/tournament/111/registrants?page={}".format(i) for i in range(1,27)]
+    start_urls = [TOURNAMENT_URL + "/registrants?page={}".format(i) for i in range(1,27)]
     custom_settings = {
             'DOWNLOAD_DELAY': 0.1,
             'USER_AGENT': 'Mozilla/4.0 (compatible; MSIE 7.0; Windows NT 5.1)',

@@ -134,11 +134,18 @@ def update_db():
 
 def get_teams():
     fp = './db/tespa_teams.csv'
-    return pd.read_csv(fp)
+    try:
+        return pd.read_csv(fp)
+    except:
+        update_db()
+
 
 def get_leaderboard():
     fp = './db/tespa_leaderboard.csv'
-    return pd.read_csv(fp)
+    try:
+        return pd.read_csv(fp)
+    except:
+        update_db()
 
 def get_from_leaderboard(team_name, column_name='rank'):
     leaderboard_path = './db/tespa_leaderboard.csv'

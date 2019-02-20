@@ -1,6 +1,8 @@
 from scrapy import Request
 from scrapy.spiders import Spider
 import datetime
+from CONFIG import TOURNAMENT_URL
+
 
 class CollectLeaderboard(Spider):
     name = 's2'
@@ -8,7 +10,7 @@ class CollectLeaderboard(Spider):
     #allowed_domains
     name = "s2"
     allowed_domains = ["tespa.org"]
-    start_urls = ["https://compete.tespa.org/tournament/111/leaderboard"]
+    start_urls = [TOURNAMENT_URL + "/leaderboard"]
     custom_settings = {
             'DOWNLOAD_DELAY': 0.1,
             'USER_AGENT': 'Mozilla/4.0 (compatible; MSIE 7.0; Windows NT 5.1)',

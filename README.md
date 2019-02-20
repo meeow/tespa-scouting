@@ -1,5 +1,8 @@
 # Files in this project:
 
+## CONFIG.py
+    - fields intended for user interaction and modification
+
 ## twitter_frontend.py
     - no longer supported
 
